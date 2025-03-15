@@ -149,9 +149,8 @@ namespace PersonsDAL.Migrations
                     b.HasOne("PersonsDAL.Entities.City", "City")
                         .WithMany()
                         .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("FK_persons_cities_city_id");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("City");
                 });
@@ -161,16 +160,14 @@ namespace PersonsDAL.Migrations
                     b.HasOne("PersonsDAL.Entities.Person", "Person")
                         .WithMany("PersonRelationships")
                         .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("FK_person_relationships_persons_person_id");
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("PersonsDAL.Entities.Person", "RelatedPerson")
-                        .WithMany("RelatedPersons")
+                        .WithMany()
                         .HasForeignKey("RelatedPersonId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired()
-                        .HasConstraintName("FK_person_relationships_persons_related_person_id");
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Person");
 
@@ -193,8 +190,6 @@ namespace PersonsDAL.Migrations
                     b.Navigation("PersonRelationships");
 
                     b.Navigation("PhoneNumbers");
-
-                    b.Navigation("RelatedPersons");
                 });
 #pragma warning restore 612, 618
         }

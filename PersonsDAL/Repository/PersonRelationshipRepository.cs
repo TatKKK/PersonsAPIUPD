@@ -9,11 +9,7 @@ using System.Threading.Tasks;
 
 namespace PersonsDAL.Repository
 {
-    //public class PersonRelationshipRepository : Repository<PersonRelationship>, IPersonRelationshipRepository
-    //{
-    //    public PersonRelationshipRepository(AppDbContext context) : base(context)
-    //    {
-    //    }
-       
-    //}
+    public class PersonRelationshipRepository : IPersonRelationshipRepository
+    {
+    }
 }

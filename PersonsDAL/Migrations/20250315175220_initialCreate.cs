@@ -46,7 +46,8 @@ namespace PersonsDAL.Migrations
                         name: "FK_persons_cities_city_id",
                         column: x => x.city_id,
                         principalTable: "cities",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -66,12 +67,14 @@ namespace PersonsDAL.Migrations
                         name: "FK_person_relationships_persons_person_id",
                         column: x => x.person_id,
                         principalTable: "persons",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_person_relationships_persons_related_person_id",
                         column: x => x.related_person_id,
                         principalTable: "persons",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(

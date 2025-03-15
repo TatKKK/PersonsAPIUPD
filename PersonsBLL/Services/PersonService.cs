@@ -1,7 +1,10 @@
-﻿using Microsoft.VisualBasic;
+﻿using AutoMapper;
+using Microsoft.VisualBasic;
+using PersonsBLL.Dtos;
 using PersonsBLL.Interfaces;
 using PersonsBLL.Models;
 using PersonsDAL.Entities;
+using PersonsDAL.Entities.Enums;
 using PersonsDAL.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -15,11 +18,19 @@ namespace PersonsBLL.Services
 {
     public class PersonService : IPersonService
     {
+        private readonly IMapper mapper;
         private readonly IPersonRepository personRepository;
 
-        public PersonService(IPersonRepository personRepository)
+        public PersonService(IPersonRepository personRepository, IMapper mapper)
         {
             this.personRepository = personRepository;
+            this.mapper = mapper;
+        }
+
+        public void AddPerson(AddPersonDto personDto)
+        {
+            var person =mapper.Map<Person>(personDto);
+            personRepository.AddPerson(person);           
         }
         
        
@@ -33,68 +44,42 @@ namespace PersonsBLL.Services
             personRepository.DeletePerson(id);
         }
 
-        //public IEnumerable<AbstractModel> GetAll()
-        //{
-        //    return personRepository.GetAll().Select(p => new PersonModel(
-        //        p.Id, p.Name, p.LastName, (Models.Enums.Gender)p.Gender, p.IdCard, p.BirthDate, p.CityId,
-        //         p.PhoneNumbers.Select(ph => new PhoneNumberModel(ph.Id, (Models.Enums.PhoneType)ph.Type, ph.Number, ph.PersonId)).ToList(),
-        //    p.RelatedPersons.Select(pr => new PersonRelationshipModel(pr.Id, (Models.Enums.RelationshipType)pr.Type, pr.RelatedPersonId, pr.RelatedPersonId)).ToList())).ToList();
-        //}
+        public void AddPerson(Person person)
+        {
+            throw new NotImplementedException();
+        }
 
-        //public AbstractModel GetById(int id)
-        //{
-        //    var person = personRepository.GetById(id);
-        //    if (person == null) return null;
-        //    return new PersonModel(person.Id, person.Name, person.LastName, (Models.Enums.Gender)person.Gender, person.IdCard, person.BirthDate,
-        //                           person.CityId, new List<PhoneNumberModel>(), new List<PersonRelationshipModel>());
-        //}
+        public GetPersonsDto? GetPersonInfoById(int id)
+        {
+            var person = personRepository.GetPersonInfoById(id);
 
-        //public void Add(AbstractModel model)
-        //{
-        //    if (model is PersonModel personModel)
-        //    {
-        //        var person = new Person
-        //        {
-        //            Id = personModel.Id,
-        //            Name = personModel.Name,
-        //            LastName = personModel.LastName,
-        //            Gender = (PersonsDAL.Entities.Enums.Gender)personModel.Gender,
-        //            IdCard = personModel.IdCard,
-        //            BirthDate = personModel.BirthDate,
-        //            CityId = personModel.CityId,
-        //            //ImagePath = personModel.ImagePath
-        //        };
-        //        personRepository.Add(person);
-        //    }
-        //}
+            if (person == null)
+            {
+                return null;
+            }
 
-        //public void Update(AbstractModel model)
-        //{
-        //    if (model is PersonModel personModel)
-        //    {
-        //        var person = new Person
-        //        {
-        //            Id = personModel.Id,
-        //            Name = personModel.Name,
-        //            LastName = personModel.LastName,
-        //            Gender = (PersonsDAL.Entities.Enums.Gender)personModel.Gender,
-        //            IdCard = personModel.IdCard,
-        //            BirthDate = personModel.BirthDate,
-        //            CityId = personModel.CityId,
-        //            ImagePath = personModel.ImagePath
-        //        };
-        //        personRepository.Update(person);
-        //    }
-        //}
+            var relatedPersons = personRepository.GetAllRelatedPersons(person);
+            var phoneNumbers = personRepository.GetAllPhoneNumbers(person);
 
-        //public void DeletePerson(int modelId)
-        //{
-        //    personRepository.DeletePerson(modelId);
-        //}
+            var personDto = mapper.Map<GetPersonsDto>(person);
+            personDto.RelatedPersons = mapper.Map<List<GetPersonsDto>>(relatedPersons);
+            personDto.PhoneNumbers = mapper.Map<List<PhoneNumberDto>>(phoneNumbers);
 
-        //public void Delete(int modelId)
-        //{
-        //    throw new NotImplementedException();
-        //}
+            return personDto;
+        }
+
+        public void AddRelatedPerson(AddRelatedPersonDto addReleatedPersonDto)
+        {
+            var relatedPerson = mapper.Map<PersonRelationship>(addReleatedPersonDto);
+            personRepository.AddRelatedPerson(relatedPerson);
+        }
+
+        public void DeleteRelatedPerson(DeleteRelatedPersonDto deleteRelatedPersonDto)
+        {
+            var relatedPerson = mapper.Map<PersonRelationship>(deleteRelatedPersonDto);
+            personRepository.DeleteRelatedPerson(relatedPerson);
+        }
+
+
     }
 }

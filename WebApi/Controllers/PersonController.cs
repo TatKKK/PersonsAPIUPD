@@ -6,6 +6,8 @@ using PersonsDAL.Entities;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System;
+using PersonsBLL.Dtos;
+using PersonsBLL.Services;
 
 namespace WebApi.Controllers
 {
@@ -13,17 +15,45 @@ namespace WebApi.Controllers
     [ApiController]
     public class PersonController : ControllerBase
     {
-        private readonly IPersonService _personService;
+        private readonly IPersonService personService;
 
         public PersonController(IPersonService personService)
         {
-            _personService = personService;
+            this.personService = personService;
+        }
+
+        [HttpPost]
+        public IActionResult AddPerson(AddPersonDto person)
+        {
+            personService.AddPerson(person);
+            return Ok();
+        }
+
+        [HttpGet("PersonInfo")]
+        public IActionResult GerPersonById(int id)
+        {
+            var person = personService.GetPersonInfoById(id);
+            return Ok(person);
+        }
+
+        [HttpPost]
+        public IActionResult AddRelatedPerson(AddRelatedPersonDto person)
+        {
+            personService.AddRelatedPerson(person);
+            return Ok();
+        }
+
+        [HttpDelete]
+        public IActionResult DeleteRelatedPerson(DeleteRelatedPersonDto person)
+        {
+            personService.DeleteRelatedPerson(person);
+            return Ok();
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var persons =  _personService.GetAll();
+            var persons =  personService.GetAll();
 
             //var options = new JsonSerializerOptions
             //{
@@ -39,7 +69,7 @@ namespace WebApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            _personService.DeletePerson(id);
+            personService.DeletePerson(id);
             return NoContent();
         }
 

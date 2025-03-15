@@ -47,6 +47,5 @@ namespace PersonsDAL.Entities
         // Relationships
         public ICollection<PhoneNumber> PhoneNumbers { get; set; } = new List<PhoneNumber>();
         public ICollection<PersonRelationship> PersonRelationships { get; set; } = new List<PersonRelationship>();
-        public ICollection<PersonRelationship> RelatedPersons { get; set; } = new List<PersonRelationship>(); // Related person
     }
 }

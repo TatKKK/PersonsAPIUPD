@@ -11,13 +11,5 @@ namespace PersonsDAL.Repository
 {
     public class PhoneNumberRepository : IPhoneNumberRepository
     {
-        //public PhoneNumberRepository(AppDbContext context) : base(context)
-        //{
-        //}
-
-        //public IEnumerable<PhoneNumber> GetAllPhoneNumbersOrderedByPerson()
-        //{
-        //    return dbSet.OrderBy(c => c.PersonId).ToList();
-        //}
     }
 }

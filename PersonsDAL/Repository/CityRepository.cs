@@ -12,13 +12,5 @@ namespace PersonsDAL.Repository
 {
     public class CityRepository : ICityRepository
     {
-        //public CityRepository(AppDbContext context) : base(context)
-        //{
-        //}
-
-        //public IEnumerable<City> GetAllCitiesOrderedByName()
-        //{
-        //    return dbSet.OrderBy(c => c.CityName).ToList();
-        //}
     }
 }

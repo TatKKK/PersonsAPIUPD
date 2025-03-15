@@ -11,8 +11,17 @@ namespace PersonsDAL.Interfaces
     {
         public void DeletePerson(int id);
 
-        //List<Person> GetAll();
+        void AddRelatedPerson(PersonRelationship personRelationship);
+        void DeleteRelatedPerson(PersonRelationship personRelationship);
 
-        object GetAll();
+        public void AddPerson(Person person);
+        Person? GetPersonInfoById(int id);
+        List<PhoneNumber> GetAllPhoneNumbers(Person person);
+
+        List<Person> GetAllRelatedPersons(Person person);
+
+        public Person GetPerson(int id);
+        public void UpdatePerson(Person person);
+        public List<Person> GetAll();
     }
 }
