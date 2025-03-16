@@ -1,4 +1,5 @@
 ﻿using PersonsDAL.Entities;
+using PersonsDAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace PersonsDAL.Interfaces
 
         public Person GetPerson(int id);
         public void UpdatePerson(Person person);
-        public List<Person> GetAll();
+        public List<PersonInfo> GetAll();
+
+        List<PersonsReport> GetRelationshipReport();
     }
 }

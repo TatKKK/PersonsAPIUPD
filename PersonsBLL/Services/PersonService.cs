@@ -6,6 +6,7 @@ using PersonsBLL.Models;
 using PersonsDAL.Entities;
 using PersonsDAL.Entities.Enums;
 using PersonsDAL.Interfaces;
+using PersonsDAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,11 +34,6 @@ namespace PersonsBLL.Services
             personRepository.AddPerson(person);           
         }
         
-       
-        public object  GetAll()
-        {
-            return personRepository.GetAll();
-        }
 
         public void DeletePerson (int id)
         {
@@ -80,6 +76,22 @@ namespace PersonsBLL.Services
             personRepository.DeleteRelatedPerson(relatedPerson);
         }
 
+        List<PersonInfo> IPersonService.GetAll()
+        {
+            return personRepository.GetAll();
+        }
 
+        public void UpdatePerson(UpdatePersonDto personDto)
+        {
+            var person = mapper.Map<Person>(personDto);
+            personRepository.UpdatePerson(person);
+
+        }
+
+        public List<PersonsReportDto> GetRelationshipReport()
+        {
+            var report = personRepository.GetRelationshipReport();
+            return mapper.Map<List<PersonsReportDto>>(report);
+        }
     }
 }

@@ -29,6 +29,13 @@ namespace WebApi.Controllers
             return Ok();
         }
 
+        [HttpPut]
+        public IActionResult UpdatePerson(UpdatePersonDto personDto)
+        {
+            personService.UpdatePerson(personDto);
+            return Ok();
+        }
+
         [HttpGet("PersonInfo")]
         public IActionResult GerPersonById(int id)
         {
@@ -55,13 +62,13 @@ namespace WebApi.Controllers
         {
             var persons =  personService.GetAll();
 
-            //var options = new JsonSerializerOptions
-            //{
-            //    ReferenceHandler = ReferenceHandler.Preserve,
-            //    WriteIndented = true
-            //};
+            var options = new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.Preserve,
+                WriteIndented = true
+            };
 
-            //string json = JsonSerializer.Serialize(persons, options);
+            string json = JsonSerializer.Serialize(persons, options);
 
             return Ok(persons);
         }
@@ -73,42 +80,12 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        //[HttpGet]
-        //public IActionResult GetAll()
-        //{
-        //    var persons = _personService.GetAll();
-        //    return Ok(persons);
-        //}
-
-        //[HttpGet("{id}")]
-        //public IActionResult GetById(int id)
-        //{
-        //    var person = _personService.GetById(id);
-        //    if (person == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return Ok(person);
-        //}
-
-        //[HttpPost]
-        //public IActionResult Create(PersonModel model)
-        //{
-        //    _personService.Add(model);
-        //    return CreatedAtAction(nameof(GetById), new { id = model.Id }, model);
-        //}
-
-        //[HttpPut("{id}")]
-        //public IActionResult Update(int id, PersonModel model)
-        //{
-        //    if (id != model.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-        //    _personService.Update(model);
-        //    return NoContent();
-        //}
-
+        [HttpGet]
+        public IActionResult GetRelationshipReport()
+        {
+            var x = personService.GetRelationshipReport();
+            return Ok(x);
+        }
 
     }
 }

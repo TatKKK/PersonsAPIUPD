@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using PersonsDAL.Data;
 using PersonsDAL.Entities;
 using PersonsDAL.Interfaces;
+using PersonsDAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,9 +73,36 @@ namespace PersonsDAL.Repository
             }
         }
 
-        public List<Person> GetAll()
+        public List<PersonInfo> GetAll()
         {
-            throw new NotImplementedException();
+            return context.Persons
+                .Include(p => p.City) // To get CityName
+                .Include(p => p.PhoneNumbers)
+                .Include(p => p.PersonRelationships)
+                .Select(p => new PersonInfo
+                {
+                    Name = p.Name,
+                    LastName = p.LastName,
+                    IdCard = p.IdCard,
+                    BirthDate = p.BirthDate,
+                    CityName = p.City.CityName, // Mapping City object to CityName
+                    ImagePath = p.ImagePath,
+                    PhoneNumbers = p.PhoneNumbers.Select(ph => new PhoneNumber
+                    {
+                        Id = ph.Id,
+                        Type = ph.Type,
+                        Number = ph.Number,
+                        PersonId = ph.PersonId
+                    }).ToList(),
+                    PersonRelationships = p.PersonRelationships.Select(pr => new PersonRelationship
+                    {
+                        Id = pr.Id,
+                        Type = pr.Type,
+                        PersonId = pr.PersonId,
+                        RelatedPersonId = pr.RelatedPersonId
+                    }).ToList()
+                })
+                .ToList();
         }
 
         public Person GetPerson(int id)
@@ -84,7 +112,26 @@ namespace PersonsDAL.Repository
 
         public void UpdatePerson(Person person)
         {
-            throw new NotImplementedException();
+            context.Entry(person).State = EntityState.Detached;
+
+            context.Persons.Attach(person);
+
+            context.Entry(person).Property(p => p.Name).IsModified = true;
+            context.Entry(person).Property(p=>p.LastName).IsModified = true;
+            context.Entry(person).Property(p=>p.BirthDate).IsModified = true;   
+            context.Entry(person).Property(p=>p.IdCard).IsModified = true;
+            context.Entry(person).Property(p=>p.CityId).IsModified = true;
+
+            foreach(var phoneNumber in person.PhoneNumbers)
+            {
+                if(phoneNumber.Id > 0)
+                {
+                    context.PhoneNumbers.Attach(phoneNumber);
+                    context.Entry(phoneNumber).Property(p=>p.Number).IsModified = true; 
+                    context.Entry(phoneNumber).Property(p=>p.Type).IsModified = true;
+                }
+            }
+            context.SaveChanges();
         }
 
         public Person? GetPersonInfoById(int id)
@@ -103,6 +150,23 @@ namespace PersonsDAL.Repository
         {
             context.PersonRelationships.Remove(personRelationship);
             context.SaveChanges();
+        }
+
+        public List<PersonsReport> GetRelationshipReport()
+        {
+            var report = (from p in context.Persons
+                          join r in context.PersonRelationships
+                          on p.Id equals r.PersonId
+                          group r by new { p.IdCard, p.Name, p.LastName, r.Type } into g
+                          select new PersonsReport
+                          {
+                              IdCard = g.Key.IdCard,
+                              Name = g.Key.Name,
+                              LastName = g.Key.LastName,
+                              Type = (int)g.Key.Type,
+                              Count = g.Count()
+                          }).ToList();
+            return report;
         }
     }
 }

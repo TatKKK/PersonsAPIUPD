@@ -6,6 +6,7 @@ using PersonsDAL.Data;
 using PersonsDAL.Interfaces;
 using PersonsDAL.Repository;
 using System;
+using WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Ensure the database is migrated and seeded
 using (var scope = app.Services.CreateScope())

@@ -8,10 +8,10 @@ namespace PersonsDAL.Models
 {
     public class PersonsReport
     {
-        public string IdCard { get; set; }
-        public string Name { get; set; }
+        public string IdCard { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
 
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         public int Type { get; set; }
         public int Count { get; set; }

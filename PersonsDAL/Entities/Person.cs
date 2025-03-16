@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace PersonsDAL.Entities
@@ -45,7 +46,10 @@ namespace PersonsDAL.Entities
         public string ImagePath { get; set; } = string.Empty;  // File path
 
         // Relationships
+        [JsonIgnore]
         public ICollection<PhoneNumber> PhoneNumbers { get; set; } = new List<PhoneNumber>();
+
+        [JsonIgnore]
         public ICollection<PersonRelationship> PersonRelationships { get; set; } = new List<PersonRelationship>();
     }
 }

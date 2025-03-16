@@ -1,5 +1,6 @@
 ﻿using PersonsBLL.Dtos;
 using PersonsDAL.Entities;
+using PersonsDAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,8 +17,11 @@ namespace PersonsBLL.Interfaces
         void DeleteRelatedPerson(DeleteRelatedPersonDto deleteRelatedPersonDto);
         GetPersonsDto? GetPersonInfoById(int id);
 
-        object GetAll();
+        List<PersonInfo> GetAll();
 
         void DeletePerson(int id);
+        void UpdatePerson(UpdatePersonDto person);
+
+        List<PersonsReportDto> GetRelationshipReport();
     }
 }

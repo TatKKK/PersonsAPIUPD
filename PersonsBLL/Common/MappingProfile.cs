@@ -17,7 +17,7 @@ namespace PersonsBLL.Common
             CreateMap<AddPersonDto, Person>();
             CreateMap<PhoneNumberDto, PhoneNumber>();
             CreateMap<PersonRelationshipDto, PersonRelationship>();
-            //CreateMap<UpdatePersonDto, Person>();
+            CreateMap<UpdatePersonDto, Person>();
             //CreateMap<UploadPersonPhotoDto, Person>();
             CreateMap<AddRelatedPersonDto, PersonRelationship>();
             CreateMap<DeleteRelatedPersonDto, PersonRelationship>();
