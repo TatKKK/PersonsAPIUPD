@@ -1,6 +1,7 @@
 ﻿using PersonsBLL.Models.Enums;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +27,8 @@ namespace PersonsBLL.Models
         public string Name { get; set; }
         public string LastName { get; set; }
         public Gender Gender { get; set; }
+
+        [RegularExpression(@"^[0-9]{11}$", ErrorMessage = "An ID Card number must be exactly 11 digits long and consist solely of numeric characters")]
         public string IdCard { get; set; }
         public DateTime BirthDate { get; set; }
         public int CityId { get; set; }

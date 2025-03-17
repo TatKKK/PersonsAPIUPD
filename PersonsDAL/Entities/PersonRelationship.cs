@@ -19,11 +19,11 @@ namespace PersonsDAL.Entities
         [Column("person_id")]
         public int PersonId { get; set; }
 
-        public Person Person { get; set; }
+        public Person Person { get; set; } = new Person();
 
         [Column("related_person_id")]
         public int RelatedPersonId { get; set; }
 
-        public Person RelatedPerson { get; set; }
+        public Person RelatedPerson { get; set; } = new Person();   
     }
 }

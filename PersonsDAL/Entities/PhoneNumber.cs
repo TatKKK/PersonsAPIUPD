@@ -14,11 +14,12 @@ namespace PersonsDAL.Entities
         public PhoneType Type { get; set; }  // Mobile, Home, Office
 
         [Required]
-        [MaxLength(20)]
-        public string Number { get; set; }
+        [MinLength(4), MaxLength(20)]
+        [RegularExpression(@"^[0-9]{11}$", ErrorMessage = "Phone number must contain only digits.")]
+        public string Number { get; set; } = string.Empty;
 
         // Foreign key
         public int PersonId { get; set; }
-        public Person Person { get; set; }
+        public Person Person { get; set; } = new Person();
     }
 }

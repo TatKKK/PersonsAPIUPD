@@ -33,32 +33,12 @@ namespace WebApi.Middleware
         {
             logger.LogError(exception, exception.Message);
 
-            object response;
-
-            if (exception is DbUpdateException dbUpdateException)
-            {
-                response = new
-                {
-                    message = "Database update error. Please check foreign key constraints.",
-                    error = dbUpdateException.InnerException?.Message
-                };
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }
-            // AddPerson-ze bad requestebs ar ichers
-            else if (exception is ArgumentException || exception is InvalidOperationException || exception is BadHttpRequestException)
-            {
-                response = new { message = "Bad request. Please check your input.", error = exception.Message };
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }
-            else
-            {
-                response = new { message = "An unexpected error occurred." };
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            }
-
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Response.ContentType = "application/json";
-            return context.Response.WriteAsJsonAsync(response);
 
+            var response = new { message = "An unexpected error occurred. Please try again later." };
+
+            return context.Response.WriteAsJsonAsync(response);
         }
     }
 }

@@ -13,18 +13,19 @@ namespace PersonsDAL.Validators
 
         public AgeValidationAttribute(int minimumAge)
         {
-            minimumAge = minimumAge;
+            this.minimumAge = minimumAge;
         }
 
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             if (value is DateTime birthDate)
             {
-                var today = DateTime.Today;
+                var today = DateTime.UtcNow.Date;
+                birthDate = birthDate.Date;
                 var age = today.Year - birthDate.Year;
 
                 // Adjust for leap years and cases where birthday hasn't occurred yet
-                if (birthDate.Date > today.AddYears(-age))
+                if (birthDate > today.AddYears(-age))
                 {
                     age--;
                 }

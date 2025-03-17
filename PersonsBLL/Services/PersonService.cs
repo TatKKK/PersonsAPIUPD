@@ -101,5 +101,59 @@ namespace PersonsBLL.Services
             return mapper.Map<List<GetPersonsDto>>(paginaterPersons);
 
         }
+
+        public List<Person> QuickSearchPersons(int pageNumber, int rowCount, string? name, string lastname, string idCard)
+        {
+            var x= personRepository.QuickSearchPersons(pageNumber, rowCount, name, lastname, idCard);
+            return x;
+        }
+        public List<Person> DetailedSearchPersons(
+           int pageNumber,
+           int rowCount,
+           string? name,
+           string? lastname,
+           string? idCard,
+           int? gender,
+           DateTime? birthDate,
+           int? cityId,
+           string? imagePath)
+        {
+            var x = personRepository.DetailedSearchPersons(pageNumber, rowCount, name, lastname, idCard, gender, birthDate, cityId, imagePath);
+            return x;
+        }
+
+        public bool UploadPhoto(UploadPhotoDto uploadPhotoDto, string webrootpath)
+        {
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var fileExtension = Path.GetExtension(uploadPhotoDto.FileName);
+            var fileName = Path.GetFileNameWithoutExtension(uploadPhotoDto.FileName);
+
+            var imageBytes = Convert.FromBase64String(uploadPhotoDto.ImageBase64);
+
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                return false;
+            }
+
+            var uniqueFileName = $"{fileName}-{Guid.NewGuid()}{fileExtension}";
+            var uploadPath = Path.Combine(webrootpath, "Uploads");
+
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            var imagePath = Path.Combine(uploadPath, uniqueFileName);
+
+            File.WriteAllBytesAsync(imagePath, imageBytes);
+
+            var person = new Person();
+            person.Id = uploadPhotoDto.Id;
+            person.ImagePath = imagePath;
+
+            personRepository.UploadPhoto(person);
+
+            return true;
+        }
     }
 }

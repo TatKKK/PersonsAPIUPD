@@ -25,5 +25,19 @@ namespace PersonsBLL.Interfaces
         List<PersonsReportDto> GetRelationshipReport();
         IEnumerable<GetPersonsDto> GetPersonsPaginated(int pageNumber, int rowCount);
 
+        List<Person> QuickSearchPersons(int pageNumber, int rowCount, string? name, string lastname, string idCard);
+        List<Person> DetailedSearchPersons(
+           int pageNumber,
+           int rowCount,
+           string? name,
+           string? lastname,
+           string? idCard,
+           int? gender,
+           DateTime? birthDate,
+           int? cityId,
+           string? imagePath);
+
+        bool UploadPhoto(UploadPhotoDto uploadPhotoDto, string webrootpath);
+
     }
 }

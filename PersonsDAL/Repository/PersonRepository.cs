@@ -12,64 +12,158 @@ using System.Threading.Tasks;
 
 namespace PersonsDAL.Repository
 {
-    public class PersonRepository(AppDbContext context) : IPersonRepository //Repository<Person>, IPersonRepository
+    public class PersonRepository : AbstractRepository, IPersonRepository
     {
+        private readonly DbSet<Person> dbSetPersons;
+        private readonly DbSet<PhoneNumber> dbSetPhone;
+        private readonly DbSet<PersonRelationship> dbSetRel;
+
+        public PersonRepository(AppDbContext context)
+            : base(context)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(context));
+            this.dbSetPersons = context.Set<Person>();
+            this.dbSetPhone = context.Set<PhoneNumber>();
+            this.dbSetRel = context.Set<PersonRelationship>();
+        }
+
         public void AddPerson(Person person)
         {
-            context.Persons.Add(person);
+            this.dbSetPersons.Add(person);
+            context.SaveChanges();
+        }
+
+        public void UpdatePerson(Person person)
+        {
+            //ArgumentNullException.ThrowIfNull(person);
+
+            //var existingPerson = this.dbSetPersons.FirstOrDefault(p => p.Id == person.Id)
+            //    ?? throw new KeyNotFoundException($"Entity with ID {person.Id} not found.");
+
+            //this.dbSetPersons.Entry(existingPerson).CurrentValues.SetValues(person);
+            //context.SaveChanges();
+
+            context.Entry(person).State = EntityState.Detached;
+
+            context.Persons.Attach(person);
+
+            context.Entry(person).Property(p => p.Name).IsModified = true;
+            context.Entry(person).Property(p => p.LastName).IsModified = true;
+            context.Entry(person).Property(p => p.Gender).IsModified = true;
+            context.Entry(person).Property(p => p.BirthDate).IsModified = true;
+            context.Entry(person).Property(p => p.IdCard).IsModified = true;
+            context.Entry(person).Property(p => p.CityId).IsModified = true;
+
+            foreach (var phoneNumber in person.PhoneNumbers)
+            {
+                if (phoneNumber.Id > 0)
+                {
+                    context.PhoneNumbers.Attach(phoneNumber);
+                    context.Entry(phoneNumber).Property(p => p.Number).IsModified = true;
+                    context.Entry(phoneNumber).Property(p => p.Type).IsModified = true;
+                }
+            }
+
+            context.SaveChanges();
+        }
+
+        public void DeletePerson(int personId)
+        {
+            var relationships = this.dbSetRel
+                .Where(pr => pr.PersonId == personId || pr.RelatedPersonId == personId)
+                .ToList();
+
+            if (relationships.Any())
+            {
+                this.dbSetRel.RemoveRange(relationships);
+                context.SaveChanges();
+            }
+
+            var person = this.dbSetPersons.FirstOrDefault(p => p.Id == personId);
+            if (person != null)
+            {
+                this.dbSetPersons.Remove(person);
+                context.SaveChanges();
+            }
+        }
+
+        public Person? GetPersonInfoById(int id)
+        {
+            return this.dbSetPersons.FirstOrDefault(p => p.Id == id);
+        }
+
+        public void AddRelatedPerson(PersonRelationship personRelationship)
+        {
+            this.dbSetRel.Add(personRelationship);
+            context.SaveChanges();
+        }
+
+        public void DeleteRelatedPerson(PersonRelationship personRelationship)
+        {
+            this.dbSetRel.Remove(personRelationship);
             context.SaveChanges();
         }
 
         public List<Person> GetAllRelatedPersons(Person person)
         {
-            var relatedPersons = new List<Person>();
-            relatedPersons = [.. context.PersonRelationships
+            return [.. this.dbSetRel
                 .Where(r => r.PersonId == person.Id)
-                .Join(context.Persons, r => r.RelatedPersonId, p => p.Id,
-                (r, p) => new Person
-                {
-                    Name = p.Name,
-                    LastName = p.LastName
-                })];
-            return relatedPersons;
+                .Join(this.dbSetPersons, r => r.RelatedPersonId, p => p.Id,
+                    (r, p) => new Person
+                    {
+                        Name = p.Name,
+                        LastName = p.LastName
+                    })];
         }
+
         public List<PhoneNumber> GetAllPhoneNumbers(Person person)
         {
-            var phoneNumbers = new List<PhoneNumber>();
-            phoneNumbers = [.. context.PhoneNumbers
+            return [.. this.dbSetPhone
+                .Where(p => p.PersonId == person.Id)
                 .Select(p => new PhoneNumber
                 {
                     PersonId = p.PersonId,
                     Number = p.Number,
                     Type = p.Type
-                })
-                .Where(p => p.PersonId == person.Id)];
-            return phoneNumbers;
+                })];
         }
-        public void DeletePerson(int personId)
+
+        public IEnumerable<Person> GetPersonsPaginated(int pageNumber, int rowCount)
         {
-            var relationships = context.PersonRelationships
-                .Where(pr => pr.PersonId == personId || pr.RelatedPersonId == personId)
-                .ToList();
-
-            if (relationships.Count != 0)
+            if (pageNumber <= 0)
             {
-                context.PersonRelationships.RemoveRange(relationships);
-                context.SaveChanges();
+                throw new ArgumentException("Page number must be greater than 0.", nameof(pageNumber));
             }
 
-            var person = context.Persons.FirstOrDefault(p => p.Id == personId);
-            if (person != null)
+            if (rowCount <= 0)
             {
-                context.Persons.Remove(person);
-                context.SaveChanges();
+                throw new ArgumentException("Row count must be greater than 0.", nameof(rowCount));
             }
+
+            return this.dbSetPersons.Skip((pageNumber - 1) * rowCount).Take(rowCount);
         }
 
+        // Reports
+        public List<PersonsReport> GetRelationshipReport()
+        {
+            return (from p in this.dbSetPersons
+                    join r in this.dbSetRel on p.Id equals r.PersonId
+                    group r by new { p.IdCard, p.Name, p.LastName, r.Type } into g
+                    select new PersonsReport
+                    {
+                        IdCard = g.Key.IdCard,
+                        Name = g.Key.Name,
+                        LastName = g.Key.LastName,
+                        Type = (int)g.Key.Type,
+                        Count = g.Count()
+                    }).ToList();
+        }
+
+        // Get all persons with related data
         public List<PersonInfo> GetAll()
         {
-            return [.. context.Persons
-                .Include(p => p.City) 
+            return [.. this.dbSetPersons
+                .Include(p => p.City)
                 .Include(p => p.PhoneNumbers)
                 .Include(p => p.PersonRelationships)
                 .Select(p => new PersonInfo
@@ -97,71 +191,86 @@ namespace PersonsDAL.Repository
                 })];
         }
 
-        public IEnumerable<Person> GetPersonsPaginated(int pageNumber, int rowCount)
+        public List<Person> QuickSearchPersons(int pageNumber, int rowCount, string? name, string lastname, string idCard)
         {
-            if (pageNumber <= 0)
+            IQueryable<Person> query = this.dbSetPersons;
+
+            if (!string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Page number must be greater than 0.", nameof(pageNumber));
+                query = query.Where(p => p.Name.Contains(name));
+            }
+            if (!string.IsNullOrEmpty(lastname))
+            {
+                query = query.Where(p => p.LastName.Contains(lastname));
+            }
+            if (!string.IsNullOrEmpty(idCard))
+            {
+                query = query.Where(p => EF.Functions.Like(p.IdCard, $"%{idCard}%"));
             }
 
-            if (rowCount <= 0)
+            var persons = query.OrderBy(p => p.LastName)
+                .Skip((pageNumber - 1) * rowCount)
+                .Take(rowCount).ToList();
+
+            return persons;
+        }
+
+        public List<Person> DetailedSearchPersons(
+            int pageNumber,
+            int rowCount,
+            string? name,
+            string? lastname,
+            string? idCard,
+            int? gender,
+            DateTime? birthDate,
+            int? cityId,
+            string? imagePath)
+        {
+            IQueryable<Person> query = this.dbSetPersons;
+
+            if (!string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Row count must be greater than 0.", nameof(rowCount));
+                query = query.Where(p => p.Name.Contains(name));
+            }
+            if (!string.IsNullOrEmpty(lastname))
+            {
+                query = query.Where(p => p.LastName.Contains(lastname));
+            }
+            if (!string.IsNullOrEmpty(idCard))
+            {
+                query = query.Where(p => EF.Functions.Like(p.IdCard, $"%{idCard}%"));
+            }
+            if (birthDate != null)
+            {
+                query = query.Where(p => p.BirthDate == birthDate.Value);
             }
 
-            return [.. context.Persons.Skip((pageNumber - 1) * rowCount).Take(rowCount)];
+            if (cityId != null && cityId != 0)
+            {
+                query = query.Where(p => p.CityId == cityId);
+            }
 
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                query = query.Where(p => EF.Functions.Like(p.ImagePath, $"%{imagePath}%"));
+            }
 
+            var persons = query
+                .OrderBy(p => p.Id)
+                .Skip((pageNumber - 1) * rowCount)
+                .Take(rowCount)
+                .ToList();
+
+            return persons;
         }
 
-        public Person GetPerson(int id)
+        public void UploadPhoto(Person person)
         {
-            throw new NotImplementedException();
-        }
-
-        public void UpdatePerson(Person person)
-        {
-            ArgumentNullException.ThrowIfNull(person);
-
-            var existingPerson = context.Persons.FirstOrDefault(p => p.Id == person.Id) ?? throw new KeyNotFoundException($"Entity with ID {person.Id} not found.");
-            context.Entry(existingPerson).CurrentValues.SetValues(person);
+            context.Entry(person).State = EntityState.Detached;
+            context.Persons.Attach(person);
+            context.Entry(person).Property(p => p.ImagePath).IsModified = true;
             context.SaveChanges();
-
-        }
-
-        public Person? GetPersonInfoById(int id)
-        {
-            var person = context.Persons.FirstOrDefault(p => p.Id == id);
-            return person;
-        }
-
-        public void AddRelatedPerson(PersonRelationship personRelationship)
-        {
-            context.PersonRelationships.Add(personRelationship);
-            context.SaveChanges();
-        }
-
-        public void DeleteRelatedPerson(PersonRelationship personRelationship)
-        {
-            context.PersonRelationships.Remove(personRelationship);
-            context.SaveChanges();
-        }
-
-        public List<PersonsReport> GetRelationshipReport()
-        {
-            var report = (from p in context.Persons
-                          join r in context.PersonRelationships
-                          on p.Id equals r.PersonId
-                          group r by new { p.IdCard, p.Name, p.LastName, r.Type } into g
-                          select new PersonsReport
-                          {
-                              IdCard = g.Key.IdCard,
-                              Name = g.Key.Name,
-                              LastName = g.Key.LastName,
-                              Type = (int)g.Key.Type,
-                              Count = g.Count()
-                          }).ToList();
-            return report;
         }
     }
 }
+
