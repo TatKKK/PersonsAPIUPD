@@ -14,26 +14,6 @@ using WebApi.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // ==============================
-// 1?? Configure Localization Services
-// ==============================
-var supportedCultures = new[]
-{
-    new CultureInfo("en-US"),
-    new CultureInfo("en"),
-    new CultureInfo("ka-GE"),
-    new CultureInfo("ka")
-};
-
-var localizationOptions = new RequestLocalizationOptions
-{
-    DefaultRequestCulture = new RequestCulture("en-US"),
-    SupportedCultures = supportedCultures,
-    SupportedUICultures = supportedCultures
-};
-
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-// ==============================
 // 2?? Dependency Injection
 // ==============================
 builder.Services.AddDbContext<AppDbContext>(opts =>
@@ -42,6 +22,9 @@ builder.Services.AddDbContext<AppDbContext>(opts =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         options => options.EnableRetryOnFailure());
 });
+
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
 
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
@@ -60,35 +43,28 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// ==============================
-// 4?? Apply Localization Before Controllers
-// ==============================
-app.UseRequestLocalization(localizationOptions);
+app.UseRequestLocalization(options =>
+{
+    options.SetDefaultCulture("ka-GE")
+           .AddSupportedCultures("en-US", "ka-GE") // Add other supported cultures
+           .AddSupportedUICultures("en-US", "ka-GE"); // Specify supported UICultures
+});
 
-// ==============================
-// 5?? Apply Exception Handling Middleware
-// ==============================
 app.UseMiddleware<ExceptionMiddleware>();
 
-// ==============================
-// 6?? Ensure Database is Populated
-// ==============================
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     SeedData.SeedAppData(dbContext);
 }
 
-// ==============================
-// 7?? Configure Request Pipeline
-// ==============================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// ? Apply Authentication & Authorization Middleware
+
 app.UseAuthorization();
 
 // ? Register Controllers

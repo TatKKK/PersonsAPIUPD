@@ -11,6 +11,7 @@ using PersonsBLL.Services;
 using Microsoft.Extensions.Localization;
 using WebApi.Filters;
 using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 namespace WebApi.Controllers
 {
@@ -29,11 +30,11 @@ namespace WebApi.Controllers
             this.env = env;
         }
 
-        [HttpGet]
-        public IActionResult TestAction()
+        [HttpGet("hello")]
+        public IActionResult GetHelloMessage()
         {
-            string message = localizer["HelloMessage"];
-            return Ok(new { message, CurrentCulture = CultureInfo.CurrentCulture.Name });
+            var message = localizer["HelloMessage"]; // Auto-selects based on culture
+            return Ok(new { Message = message });
         }
 
 

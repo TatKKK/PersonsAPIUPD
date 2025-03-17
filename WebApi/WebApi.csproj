@@ -17,6 +17,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
@@ -27,6 +28,18 @@
 
   <ItemGroup>
     <Folder Include="Uploads\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Controllers.PersonController.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Controllers.PersonController.ka.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\PersonController.resx">
+      <Generator>C:\Users\admin\Desktop\TBC\PersonsAPI\WebApi\Resources\PersonController.resx</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
