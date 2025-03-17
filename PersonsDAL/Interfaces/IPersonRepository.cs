@@ -26,5 +26,7 @@ namespace PersonsDAL.Interfaces
         public List<PersonInfo> GetAll();
 
         List<PersonsReport> GetRelationshipReport();
+
+        IEnumerable<Person> GetPersonsPaginated(int pageNumber, int rowCount);
     }
 }

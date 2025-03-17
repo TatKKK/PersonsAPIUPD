@@ -23,5 +23,7 @@ namespace PersonsBLL.Interfaces
         void UpdatePerson(UpdatePersonDto person);
 
         List<PersonsReportDto> GetRelationshipReport();
+        IEnumerable<GetPersonsDto> GetPersonsPaginated(int pageNumber, int rowCount);
+
     }
 }

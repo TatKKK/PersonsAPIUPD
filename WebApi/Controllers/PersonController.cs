@@ -13,14 +13,9 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class PersonController : ControllerBase
+    public class PersonController(IPersonService personService) : ControllerBase
     {
-        private readonly IPersonService personService;
-
-        public PersonController(IPersonService personService)
-        {
-            this.personService = personService;
-        }
+        private readonly IPersonService personService = personService;
 
         [HttpPost]
         public IActionResult AddPerson(AddPersonDto person)
@@ -62,13 +57,13 @@ namespace WebApi.Controllers
         {
             var persons =  personService.GetAll();
 
-            var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.Preserve,
-                WriteIndented = true
-            };
+            //var options = new JsonSerializerOptions
+            //{
+            //    ReferenceHandler = ReferenceHandler.Preserve,
+            //    WriteIndented = true
+            //};
 
-            string json = JsonSerializer.Serialize(persons, options);
+            //string json = JsonSerializer.Serialize(persons, options);
 
             return Ok(persons);
         }

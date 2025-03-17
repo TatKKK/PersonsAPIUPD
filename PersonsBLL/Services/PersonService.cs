@@ -17,17 +17,8 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PersonsBLL.Services
 {
-    public class PersonService : IPersonService
+    public class PersonService(IPersonRepository personRepository, IMapper mapper) : IPersonService
     {
-        private readonly IMapper mapper;
-        private readonly IPersonRepository personRepository;
-
-        public PersonService(IPersonRepository personRepository, IMapper mapper)
-        {
-            this.personRepository = personRepository;
-            this.mapper = mapper;
-        }
-
         public void AddPerson(AddPersonDto personDto)
         {
             var person =mapper.Map<Person>(personDto);
@@ -92,6 +83,23 @@ namespace PersonsBLL.Services
         {
             var report = personRepository.GetRelationshipReport();
             return mapper.Map<List<PersonsReportDto>>(report);
+        }
+
+        public IEnumerable<GetPersonsDto> GetPersonsPaginated(int pageNumber, int rowCount)
+        {
+            if (pageNumber <= 0)
+            {
+                throw new ArgumentException("Page number must be greater than 0.", nameof(pageNumber));
+            }
+
+            if (rowCount <= 0)
+            {
+                throw new ArgumentException("Row count must be greater than 0.", nameof(rowCount));
+            }
+
+            var paginaterPersons = personRepository.GetPersonsPaginated(pageNumber, rowCount);
+            return mapper.Map<List<GetPersonsDto>>(paginaterPersons);
+
         }
     }
 }

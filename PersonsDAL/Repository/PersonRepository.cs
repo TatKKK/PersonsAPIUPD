@@ -12,15 +12,8 @@ using System.Threading.Tasks;
 
 namespace PersonsDAL.Repository
 {
-    public class PersonRepository : IPersonRepository //Repository<Person>, IPersonRepository
+    public class PersonRepository(AppDbContext context) : IPersonRepository //Repository<Person>, IPersonRepository
     {
-        AppDbContext context;
-
-        public PersonRepository(AppDbContext context)
-        {
-            this.context = context;
-        }
-
         public void AddPerson(Person person)
         {
             context.Persons.Add(person);
@@ -30,27 +23,27 @@ namespace PersonsDAL.Repository
         public List<Person> GetAllRelatedPersons(Person person)
         {
             var relatedPersons = new List<Person>();
-            relatedPersons = context.PersonRelationships
+            relatedPersons = [.. context.PersonRelationships
                 .Where(r => r.PersonId == person.Id)
                 .Join(context.Persons, r => r.RelatedPersonId, p => p.Id,
                 (r, p) => new Person
                 {
                     Name = p.Name,
                     LastName = p.LastName
-                }).ToList();
+                })];
             return relatedPersons;
         }
         public List<PhoneNumber> GetAllPhoneNumbers(Person person)
         {
             var phoneNumbers = new List<PhoneNumber>();
-            phoneNumbers = context.PhoneNumbers
+            phoneNumbers = [.. context.PhoneNumbers
                 .Select(p => new PhoneNumber
                 {
                     PersonId = p.PersonId,
                     Number = p.Number,
                     Type = p.Type
                 })
-                .Where(p => p.PersonId == person.Id).ToList();
+                .Where(p => p.PersonId == person.Id)];
             return phoneNumbers;
         }
         public void DeletePerson(int personId)
@@ -59,7 +52,7 @@ namespace PersonsDAL.Repository
                 .Where(pr => pr.PersonId == personId || pr.RelatedPersonId == personId)
                 .ToList();
 
-            if (relationships.Any())
+            if (relationships.Count != 0)
             {
                 context.PersonRelationships.RemoveRange(relationships);
                 context.SaveChanges();
@@ -75,8 +68,8 @@ namespace PersonsDAL.Repository
 
         public List<PersonInfo> GetAll()
         {
-            return context.Persons
-                .Include(p => p.City) // To get CityName
+            return [.. context.Persons
+                .Include(p => p.City) 
                 .Include(p => p.PhoneNumbers)
                 .Include(p => p.PersonRelationships)
                 .Select(p => new PersonInfo
@@ -85,7 +78,7 @@ namespace PersonsDAL.Repository
                     LastName = p.LastName,
                     IdCard = p.IdCard,
                     BirthDate = p.BirthDate,
-                    CityName = p.City.CityName, // Mapping City object to CityName
+                    CityName = p.City.CityName,
                     ImagePath = p.ImagePath,
                     PhoneNumbers = p.PhoneNumbers.Select(ph => new PhoneNumber
                     {
@@ -101,8 +94,24 @@ namespace PersonsDAL.Repository
                         PersonId = pr.PersonId,
                         RelatedPersonId = pr.RelatedPersonId
                     }).ToList()
-                })
-                .ToList();
+                })];
+        }
+
+        public IEnumerable<Person> GetPersonsPaginated(int pageNumber, int rowCount)
+        {
+            if (pageNumber <= 0)
+            {
+                throw new ArgumentException("Page number must be greater than 0.", nameof(pageNumber));
+            }
+
+            if (rowCount <= 0)
+            {
+                throw new ArgumentException("Row count must be greater than 0.", nameof(rowCount));
+            }
+
+            return [.. context.Persons.Skip((pageNumber - 1) * rowCount).Take(rowCount)];
+
+
         }
 
         public Person GetPerson(int id)
@@ -112,26 +121,12 @@ namespace PersonsDAL.Repository
 
         public void UpdatePerson(Person person)
         {
-            context.Entry(person).State = EntityState.Detached;
+            ArgumentNullException.ThrowIfNull(person);
 
-            context.Persons.Attach(person);
-
-            context.Entry(person).Property(p => p.Name).IsModified = true;
-            context.Entry(person).Property(p=>p.LastName).IsModified = true;
-            context.Entry(person).Property(p=>p.BirthDate).IsModified = true;   
-            context.Entry(person).Property(p=>p.IdCard).IsModified = true;
-            context.Entry(person).Property(p=>p.CityId).IsModified = true;
-
-            foreach(var phoneNumber in person.PhoneNumbers)
-            {
-                if(phoneNumber.Id > 0)
-                {
-                    context.PhoneNumbers.Attach(phoneNumber);
-                    context.Entry(phoneNumber).Property(p=>p.Number).IsModified = true; 
-                    context.Entry(phoneNumber).Property(p=>p.Type).IsModified = true;
-                }
-            }
+            var existingPerson = context.Persons.FirstOrDefault(p => p.Id == person.Id) ?? throw new KeyNotFoundException($"Entity with ID {person.Id} not found.");
+            context.Entry(existingPerson).CurrentValues.SetValues(person);
             context.SaveChanges();
+
         }
 
         public Person? GetPersonInfoById(int id)

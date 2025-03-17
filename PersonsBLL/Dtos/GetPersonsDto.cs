@@ -19,10 +19,10 @@ namespace PersonsBLL.Dtos
 
         public int GenderId { get; set; }
 
-        public string IdCard { get; set; }
+        public string IdCard { get; set; } = string.Empty;
 
-        public List<GetPersonsDto> RelatedPersons { get; set; }
+        public List<GetPersonsDto> RelatedPersons { get; set; } = new List<GetPersonsDto>();
 
-        public List<PhoneNumberDto> PhoneNumbers { get; set; }
+        public List<PhoneNumberDto> PhoneNumbers { get; set; } = new List<PhoneNumberDto>();
     }
 }
