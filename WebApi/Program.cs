@@ -13,9 +13,6 @@ using WebApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ==============================
-// 2?? Dependency Injection
-// ==============================
 builder.Services.AddDbContext<AppDbContext>(opts =>
 {
     opts.UseSqlServer(
@@ -29,9 +26,7 @@ builder.Services.AddLocalization(options => options.ResourcesPath = "Resources")
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
-// ==============================
-// 3?? Configure Controllers & Filters
-// ==============================
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add(new ValidateModelAttribute());
@@ -51,6 +46,7 @@ app.UseRequestLocalization(options =>
 });
 
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<LanguageMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {
