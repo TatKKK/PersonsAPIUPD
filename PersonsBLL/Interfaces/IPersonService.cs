@@ -17,7 +17,7 @@ namespace PersonsBLL.Interfaces
         void DeleteRelatedPerson(DeleteRelatedPersonDto deleteRelatedPersonDto);
         GetPersonsDto? GetPersonInfoById(int id);
 
-        List<PersonInfo> GetAll();
+        List<GetPersonsDto> GetAll();
 
         void DeletePerson(int id);
         void UpdatePerson(UpdatePersonDto person);

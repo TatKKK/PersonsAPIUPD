@@ -1,4 +1,5 @@
 ﻿using PersonsBLL.Models;
+using PersonsDAL.Entities.Enums;
 using PersonsDAL.Validators;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace PersonsBLL.Dtos
         public string ?LastName { get; set; }
 
         [GenderValidation]
-        public int Gender { get; set; }
+        public Gender Gender { get; set; }
 
         [Required]
         [MinLength(11), MaxLength(11)]

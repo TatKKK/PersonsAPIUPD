@@ -113,7 +113,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public IActionResult QuickSearchPersons(int pageNumber, int pageSize, string? name, string? lastname, string? idCard)
         {
-            var x = personService.QuickSearchPersons(pageNumber, pageSize, name, lastname, idCard);
+            var x = personService.QuickSearchPersons(pageNumber, pageSize, name, lastname??"", idCard??"");
             return Ok(x);
         }
         [HttpGet]

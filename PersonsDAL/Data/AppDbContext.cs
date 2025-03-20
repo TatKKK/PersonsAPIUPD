@@ -13,11 +13,14 @@ namespace PersonsDAL.Data
         public DbSet<Person> Persons { get; set; }
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
         public DbSet<PersonRelationship> PersonRelationships { get; set; }
-        public DbSet<City> Cities { get; set; }  
+        public DbSet<City> Cities { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Person>()
+                 .HasIndex(p => p.IdCard)
+                 .IsUnique();
             modelBuilder.Entity<PersonRelationship>()
                  .HasKey(pr => new { pr.PersonId, pr.RelatedPersonId });
 
@@ -33,6 +36,6 @@ namespace PersonsDAL.Data
                 .HasForeignKey(rp => rp.RelatedPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-       }
+        }
     }
 }

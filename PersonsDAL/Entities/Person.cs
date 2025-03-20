@@ -30,7 +30,6 @@ namespace PersonsDAL.Entities
         // Identification
         [Required]
         [MinLength(11), MaxLength(11)]
-        [RegularExpression(@"^[0-9]{11}$", ErrorMessage = "ID Card must contain exactly 11 digits.")]
         public string IdCard { get; set; } = string.Empty;
 
         [Required]
@@ -40,7 +39,7 @@ namespace PersonsDAL.Entities
         // City Relationship
         [Column("city_id")]
         public int CityId { get; set; }
-        public City City { get; set; } // Navigation property
+        public City? City { get; set; } // Navigation property
 
         // Additional Data
         [MaxLength(255)]

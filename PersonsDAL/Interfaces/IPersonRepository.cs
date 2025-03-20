@@ -14,7 +14,7 @@ namespace PersonsDAL.Interfaces
         void UpdatePerson(Person person);
         void DeletePerson(int id);
         Person? GetPersonInfoById(int id);
-        List<PersonInfo> GetAll();
+        List<Person> GetAllPersons();
 
         void AddRelatedPerson(PersonRelationship personRelationship);
         void DeleteRelatedPerson(PersonRelationship personRelationship);

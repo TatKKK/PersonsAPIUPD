@@ -17,7 +17,7 @@ namespace PersonsBLL.Dtos
 
         [Required]
         [MinLength(4), MaxLength(20)]
-        [RegularExpression(@"^[0-9]{11}$", ErrorMessage = "Phone number must contain only digits.")]
+        [RegularExpression(@"^[0-9]{4,20}$", ErrorMessage = "Phone number must contain only digits (4 to 20 digits).")]
         public string? Number { get; set; }
 
         [Required]

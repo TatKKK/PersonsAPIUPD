@@ -19,11 +19,13 @@ namespace PersonsDAL.Entities
         [Column("person_id")]
         public int PersonId { get; set; }
 
-        public Person Person { get; set; } = new Person();
+        [JsonIgnore]
+        public Person? Person { get; set; } 
 
         [Column("related_person_id")]
         public int RelatedPersonId { get; set; }
 
-        public Person RelatedPerson { get; set; } = new Person();   
+        [JsonIgnore]
+        public Person? RelatedPerson { get; set; }
     }
 }

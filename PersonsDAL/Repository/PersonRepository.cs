@@ -12,24 +12,18 @@ using System.Threading.Tasks;
 
 namespace PersonsDAL.Repository
 {
-    public class PersonRepository : AbstractRepository, IPersonRepository
+    public class PersonRepository : IPersonRepository
     {
-        private readonly DbSet<Person> dbSetPersons;
-        private readonly DbSet<PhoneNumber> dbSetPhone;
-        private readonly DbSet<PersonRelationship> dbSetRel;
+        AppDbContext context;
 
         public PersonRepository(AppDbContext context)
-            : base(context)
         {
-            ArgumentNullException.ThrowIfNull(nameof(context));
-            this.dbSetPersons = context.Set<Person>();
-            this.dbSetPhone = context.Set<PhoneNumber>();
-            this.dbSetRel = context.Set<PersonRelationship>();
+            this.context = context;
         }
 
         public void AddPerson(Person person)
         {
-            this.dbSetPersons.Add(person);
+            context.Persons.Add(person);
             context.SaveChanges();
         }
 
@@ -69,63 +63,70 @@ namespace PersonsDAL.Repository
 
         public void DeletePerson(int personId)
         {
-            var relationships = this.dbSetRel
-                .Where(pr => pr.PersonId == personId || pr.RelatedPersonId == personId)
-                .ToList();
+            var relationships = context.PersonRelationships
+                 .Where(pr => pr.PersonId == personId || pr.RelatedPersonId == personId)
+                 .ToList();
 
             if (relationships.Any())
             {
-                this.dbSetRel.RemoveRange(relationships);
+                context.PersonRelationships.RemoveRange(relationships);
                 context.SaveChanges();
             }
 
-            var person = this.dbSetPersons.FirstOrDefault(p => p.Id == personId);
+            var person = context.Persons.FirstOrDefault(p => p.Id == personId);
             if (person != null)
             {
-                this.dbSetPersons.Remove(person);
+                context.Persons.Remove(person);
                 context.SaveChanges();
             }
         }
 
+        public List<Person> GetAllPersons()
+        {
+            return context.Persons.ToList();
+        }
         public Person? GetPersonInfoById(int id)
         {
-            return this.dbSetPersons.FirstOrDefault(p => p.Id == id);
+            var person = context.Persons.FirstOrDefault(p => p.Id == id);
+            return person;
         }
 
         public void AddRelatedPerson(PersonRelationship personRelationship)
         {
-            this.dbSetRel.Add(personRelationship);
+            context.PersonRelationships.Add(personRelationship);
             context.SaveChanges();
         }
 
         public void DeleteRelatedPerson(PersonRelationship personRelationship)
         {
-            this.dbSetRel.Remove(personRelationship);
+            context.Remove(personRelationship);
             context.SaveChanges();
         }
 
         public List<Person> GetAllRelatedPersons(Person person)
         {
-            return [.. this.dbSetRel
-                .Where(r => r.PersonId == person.Id)
-                .Join(this.dbSetPersons, r => r.RelatedPersonId, p => p.Id,
-                    (r, p) => new Person
-                    {
-                        Name = p.Name,
-                        LastName = p.LastName
-                    })];
+            var relPersons = new List<Person>();
+
+            relPersons = context.PersonRelationships
+                                    .Where(r => r.PersonId == person.Id)
+                                    .Join(context.Persons, r => r.RelatedPersonId, p => p.Id,
+                                    (r, p) => new Person
+                                    {
+                                        Name = p.Name,
+                                        LastName = p.LastName
+                                    }).ToList();
+
+            return relPersons;
         }
 
         public List<PhoneNumber> GetAllPhoneNumbers(Person person)
         {
-            return [.. this.dbSetPhone
-                .Where(p => p.PersonId == person.Id)
-                .Select(p => new PhoneNumber
-                {
-                    PersonId = p.PersonId,
-                    Number = p.Number,
-                    Type = p.Type
-                })];
+            var phoneNumbers = new List<PhoneNumber>();
+            phoneNumbers = context.PhoneNumbers
+                                    .Select(p => new PhoneNumber { PersonId = p.PersonId, Number = p.Number, Type = p.Type })
+                                    .Where(p => p.PersonId == person.Id)
+                                    .ToList();
+            return phoneNumbers;
         }
 
         public IEnumerable<Person> GetPersonsPaginated(int pageNumber, int rowCount)
@@ -140,84 +141,92 @@ namespace PersonsDAL.Repository
                 throw new ArgumentException("Row count must be greater than 0.", nameof(rowCount));
             }
 
-            return this.dbSetPersons.Skip((pageNumber - 1) * rowCount).Take(rowCount);
+            return this.context.Persons.Skip((pageNumber - 1) * rowCount).Take(rowCount);
         }
 
         // Reports
         public List<PersonsReport> GetRelationshipReport()
         {
-            return (from p in this.dbSetPersons
-                    join r in this.dbSetRel on p.Id equals r.PersonId
-                    group r by new { p.IdCard, p.Name, p.LastName, r.Type } into g
-                    select new PersonsReport
-                    {
-                        IdCard = g.Key.IdCard,
-                        Name = g.Key.Name,
-                        LastName = g.Key.LastName,
-                        Type = (int)g.Key.Type,
-                        Count = g.Count()
-                    }).ToList();
+            var report = (from p in context.Persons
+                          join r in context.PersonRelationships
+                          on p.Id equals r.PersonId
+                          group r by new { p.IdCard, p.Name, p.LastName, r.Type } into g
+                          select new PersonsReport
+                          {
+                              IdCard = g.Key.IdCard,
+                              Name = g.Key.Name,
+                              LastName = g.Key.LastName,
+                              Type = (int)g.Key.Type,
+                              Count = g.Count()
+                          }).ToList();
+
+            return report;
         }
 
         // Get all persons with related data
-        public List<PersonInfo> GetAll()
-        {
-            return [.. this.dbSetPersons
-                .Include(p => p.City)
-                .Include(p => p.PhoneNumbers)
-                .Include(p => p.PersonRelationships)
-                .Select(p => new PersonInfo
-                {
-                    Name = p.Name,
-                    LastName = p.LastName,
-                    IdCard = p.IdCard,
-                    BirthDate = p.BirthDate,
-                    CityName = p.City.CityName,
-                    ImagePath = p.ImagePath,
-                    PhoneNumbers = p.PhoneNumbers.Select(ph => new PhoneNumber
-                    {
-                        Id = ph.Id,
-                        Type = ph.Type,
-                        Number = ph.Number,
-                        PersonId = ph.PersonId
-                    }).ToList(),
-                    PersonRelationships = p.PersonRelationships.Select(pr => new PersonRelationship
-                    {
-                        Id = pr.Id,
-                        Type = pr.Type,
-                        PersonId = pr.PersonId,
-                        RelatedPersonId = pr.RelatedPersonId
-                    }).ToList()
-                })];
-        }
+        //public List<Person> GetAll()
+        //{
+        //    return context.Persons
+        //.Include(p => p.City)
+        //.Include(p => p.PhoneNumbers)
+        //.Include(p => p.PersonRelationships)
+        //.Select(p => new PersonInfo
+        //{
+        //    Name = p.Name,
+        //    LastName = p.LastName,
+        //    IdCard = p.IdCard,
+        //    BirthDate = p.BirthDate,
+        //    CityName = p.City.CityName,
+        //    ImagePath = p.ImagePath,
+        //    PhoneNumbers = p.PhoneNumbers.Select(ph => new PhoneNumber
+        //    {
+        //        Id = ph.Id,
+        //        Type = ph.Type,
+        //        Number = ph.Number,
+        //        PersonId = ph.PersonId
+        //    }).ToList(),
+        //    PersonRelationships = p.PersonRelationships.Select(pr => new PersonRelationship
+        //    {
+        //        Id = pr.Id,
+        //        Type = pr.Type,
+        //        PersonId = pr.PersonId,
+        //        RelatedPersonId = pr.RelatedPersonId
+        //    }).ToList()
+        //})
+        //.ToList();
+        //}
 
-        public List<Person> QuickSearchPersons(int pageNumber, int rowCount, string? name, string lastname, string idCard)
+        public List<Person> QuickSearchPersons(int pageNumber, int pageSize, string? name, string? lastname, string? idCard)
         {
-            IQueryable<Person> query = this.dbSetPersons;
+            IQueryable<Person> query = context.Persons;
 
             if (!string.IsNullOrEmpty(name))
             {
                 query = query.Where(p => p.Name.Contains(name));
             }
+
             if (!string.IsNullOrEmpty(lastname))
             {
                 query = query.Where(p => p.LastName.Contains(lastname));
             }
+
             if (!string.IsNullOrEmpty(idCard))
             {
                 query = query.Where(p => EF.Functions.Like(p.IdCard, $"%{idCard}%"));
             }
 
-            var persons = query.OrderBy(p => p.LastName)
-                .Skip((pageNumber - 1) * rowCount)
-                .Take(rowCount).ToList();
+            var persons = query
+                .OrderBy(p => p.LastName)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             return persons;
         }
 
         public List<Person> DetailedSearchPersons(
             int pageNumber,
-            int rowCount,
+            int pageSize,
             string? name,
             string? lastname,
             string? idCard,
@@ -226,20 +235,24 @@ namespace PersonsDAL.Repository
             int? cityId,
             string? imagePath)
         {
-            IQueryable<Person> query = this.dbSetPersons;
+
+            IQueryable<Person> query = context.Persons;
 
             if (!string.IsNullOrEmpty(name))
             {
                 query = query.Where(p => p.Name.Contains(name));
             }
+
             if (!string.IsNullOrEmpty(lastname))
             {
                 query = query.Where(p => p.LastName.Contains(lastname));
             }
+
             if (!string.IsNullOrEmpty(idCard))
             {
                 query = query.Where(p => EF.Functions.Like(p.IdCard, $"%{idCard}%"));
             }
+
             if (birthDate != null)
             {
                 query = query.Where(p => p.BirthDate == birthDate.Value);
@@ -257,8 +270,8 @@ namespace PersonsDAL.Repository
 
             var persons = query
                 .OrderBy(p => p.Id)
-                .Skip((pageNumber - 1) * rowCount)
-                .Take(rowCount)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
 
             return persons;

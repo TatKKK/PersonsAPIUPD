@@ -31,11 +31,6 @@ namespace PersonsBLL.Services
             personRepository.DeletePerson(id);
         }
 
-        public void AddPerson(Person person)
-        {
-            throw new NotImplementedException();
-        }
-
         public GetPersonsDto? GetPersonInfoById(int id)
         {
             var person = personRepository.GetPersonInfoById(id);
@@ -67,9 +62,25 @@ namespace PersonsBLL.Services
             personRepository.DeleteRelatedPerson(relatedPerson);
         }
 
-        List<PersonInfo> IPersonService.GetAll()
+        List<GetPersonsDto> IPersonService.GetAll()
         {
-            return personRepository.GetAll();
+            var persons = personRepository.GetAllPersons();
+
+            var personsDtoList = new List<GetPersonsDto>();
+
+            foreach (var person in persons)
+            {
+                var relatedPersons = personRepository.GetAllRelatedPersons(person);
+                var phoneNumbers = personRepository.GetAllPhoneNumbers(person);
+
+                var personDto = mapper.Map<GetPersonsDto>(person);
+                personDto.RelatedPersons = mapper.Map<List<GetPersonsDto>>(relatedPersons);
+                personDto.PhoneNumbers = mapper.Map<List<PhoneNumberDto>>(phoneNumbers);
+
+                personsDtoList.Add(personDto);
+            }
+
+            return personsDtoList;
         }
 
         public void UpdatePerson(UpdatePersonDto personDto)
@@ -128,7 +139,7 @@ namespace PersonsBLL.Services
             var fileExtension = Path.GetExtension(uploadPhotoDto.FileName);
             var fileName = Path.GetFileNameWithoutExtension(uploadPhotoDto.FileName);
 
-            var imageBytes = Convert.FromBase64String(uploadPhotoDto.ImageBase64);
+            var imageBytes = Convert.FromBase64String(uploadPhotoDto.ImageBase64??"");
 
             if (!allowedExtensions.Contains(fileExtension))
             {

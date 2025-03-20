@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace PersonsDAL.Entities
 
         [Required]
         [MinLength(4), MaxLength(20)]
-        [RegularExpression(@"^[0-9]{11}$", ErrorMessage = "Phone number must contain only digits.")]
+        [RegularExpression(@"^[0-9]{4,20}$", ErrorMessage = "Phone number must contain only digits (4 to 20 digits).")]
         public string Number { get; set; } = string.Empty;
 
         // Foreign key

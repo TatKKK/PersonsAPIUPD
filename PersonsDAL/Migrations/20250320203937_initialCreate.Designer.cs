@@ -12,7 +12,7 @@ using PersonsDAL.Data;
 namespace PersonsDAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250315175220_initialCreate")]
+    [Migration("20250320203937_initialCreate")]
     partial class initialCreate
     {
         /// <inheritdoc />
